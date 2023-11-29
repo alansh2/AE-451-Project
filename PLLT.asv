@@ -1,0 +1,26 @@
+% AE 451 AEROELASTICITY
+% Modern LLT
+
+clc; clear; close all;
+
+%% Wing Geometry
+
+RA = 10;            % Aspect Ratio
+c = 1;              % Chord
+b = RA*c;           % Wingspan (rectangular)
+
+L = 10;              % Sweep angle [deg]
+Phi = 0;            % Dihedral angle [deg]
+
+N = 10;             % Number of horseshoe vortices, control pts (even #)
+
+P = [abs(linspace(-b/2,b/2,N+1).*sind(L))+c/4;      % Horseshoe Nodal Points
+    linspace(-b/2,b/2,N+1).*cosd(L)];
+
+figure
+plot(P(2,:), P(1,:),'o')
+xlabel('y'); ylabel('x');
+set(gca, 'YDir','reverse'); set(gca, 'XDir','reverse')
+axis equal
+
+%% Induced velocity
