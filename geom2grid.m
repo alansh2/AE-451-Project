@@ -1,0 +1,11 @@
+function y = geom2grid(b,AR,taper,LEsweep,theta)
+Nhalf = length(theta);
+ys = linspace(0,1,Nhalf); % non-dimensional span coordinate
+croot = b/AR * 2/(1+taper); % trapezoidal planform
+ctip = croot*taper;
+c = croot + ys*(ctip-croot); % half-span chord distribution
+xLEtip = tand(LEsweep)*b/2;
+x25 = linspace(croot/4,xLEtip+ctip/4,Nhalf);
+x75 = x25 + 0.5*c;
+x25 = [x25(Nhalf:-1:2) x25];
+x75 = [x75(Nhalf:-1:2) x75];
