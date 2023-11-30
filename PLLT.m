@@ -10,7 +10,7 @@ c = 1;              % Chord
 b = RA*c;           % Wingspan (rectangular)
 
 L = 10;              % Sweep angle [deg]
-Phi = 0;            % Dihedral angle [deg]
+Phi = 10;            % Dihedral angle [deg]
 
 N = 12;             % Number of horseshoe vortices, control pts (even #)
 
@@ -30,7 +30,7 @@ xlabel('y'); ylabel('x');
 set(gca, 'YDir','reverse'); set(gca, 'XDir','reverse')
 axis equal
 
-[p25,p75] = geom2grid(b,RA,0.7,L,Phi,zeros(1,floor(N/2)+1));
+[p25,p75] = geom2grid(b,RA,0.7,L,Phi,linspace(10,-10,floor(N/2)+1));
 figure
 plot3(p25(:,1),p25(:,2),p25(:,3),'.','MarkerSize',8)
 hold on
