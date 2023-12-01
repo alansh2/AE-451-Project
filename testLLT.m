@@ -27,6 +27,9 @@ dA = diff(vertex(:,2)).*cctrl; % panel planform area
 alpha = 5;
 uinf = repmat([cosd(alpha) 0 sind(alpha)],N,1);
 Vinf = 1;
+
+%%
+vij = zeros(N,3*N);
 for i = 1:N
     rij = pctrl(i,:) - vertex;
     r = vecnorm(rij,2,2);
@@ -41,9 +44,27 @@ end
 un = un./vecnorm(un,2);
 ua = ua./vecnorm(ua,2);
 
-% Iterate G
-Gamma = sqrt(1-linspace(-1,1,N).^2);
-G = reshape(Gamma/Vinf,1,N);
+%%
+vij = zeros(N^2,3);
+for i = 1:N
+    rij = pctrl(i,:) - vertex;
+    r = vecnorm(rij,2,2);
+    vij((i-1)*N+1:i*N,:) = cross(uinf,rij(2:N+1,:),2)./(r(2:N+1).*(r(2:N+1)-dot(uinf,rij(2:N+1,:),2)))+...
+        (r(1:N)+r(2:N+1)).*cross(rij(1:N,:),rij(2:N+1,:),2)./(r(1:N).*r(2:N+1).*(r(1:N).*r(2:N+1)+dot(rij(1:N,:),rij(2:N+1,:),2)))-...
+        cross(uinf,rij(1:N,:),2)./(r(1:N).*(r(1:N)-dot(uinf,rij(1:N,:),2)));
+    vij((i-1)*N+i,:) = cross(uinf(1,:),rij(i+1,:),2)./(r(i+1).*(r(i+1)-dot(uinf(1,:),rij(i+1,:),2)))-...
+        cross(uinf(1,:),rij(i,:),2)./(r(i).*(r(i)-dot(uinf(1,:),rij(i,:),2)));
+    un(i,:) = cross(rij(i+1,:),rij(i,:));
+    ua(i,:) = rij(i,:) - dl(i,:)/2;
+end
+un = un./vecnorm(un,2);
+ua = ua./vecnorm(ua,2);
+vij = reshape(reshape(vij,N,3*N).',N,3*N);
+
+%% Iterate G
+% Gamma = 2*sqrt(1-linspace(-1,1,N).^2);
+% G = reshape(Gamma/Vinf,1,N);
+G = reshape(G,1,N);
 v = uinf + reshape(G*vij/(4*pi),3,N).';
 alf = atan2d(dot(v,un,2),dot(v,ua,2));
 for i = N:-1:1
