@@ -1,4 +1,4 @@
-function [p25,p75] = geom2grid(b,AR,taper,LEsweep,dih,t25,varargin)
+function [p25,p75,c75out] = geom2grid(b,AR,taper,LEsweep,dih,t25,varargin)
 % Inputs:
 %       b: span
 %      AR: aspect ratio
@@ -23,6 +23,7 @@ y75 = y25(1:Nhalf-1) + diff(y25)/2; % for control points along 3c/4 line
 croot = b/AR * 2/(1+taper); % trapezoidal planform
 ctip = croot*taper;
 c75 = croot + y75*(ctip-croot);
+c75out = [c75(Nhalf-1:-1:1) c75].';
 
 xLEtip = tand(LEsweep)*b/2;
 x25 = croot/4 + y25*(xLEtip+ctip/4-croot/4);
