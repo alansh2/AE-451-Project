@@ -1,0 +1,10 @@
+function polyout = cubicdisplacement(dl,Lbar)
+E = 1;
+I = 1;
+N = size(dl,1);
+dybar = vecnorm(dl(:,1:2),2,2);
+ybar = [0;cumsum(dybar(1:N-1))] + dybar/2;
+bbar = ybar(N) + dybar(N)/2;
+l3 = -sum(Lbar.*(ybar.^3-3*bbar*ybar.^2).*dybar)/(12*E*I*bbar^2);
+l2 = -3*l3*bbar;
+polyout = [l3 l2 0 0];

@@ -10,12 +10,12 @@ af = CST_airfoil(Au,Al,51);
 
 %% Wing geometry
 b = 10;         % total wingspan
-AR = 7;         % aspect ratio
-taper = 1;    % taper ratio (tip/chord)
+AR = 20/3;         % aspect ratio
+taper = 0.5;    % taper ratio (tip/chord)
 LEsweep = 10;   % leading-edge sweep angle (deg)
-dih = 0;        % dihedral angle (deg)
+dih = 10;        % dihedral angle (deg)
 
-Nvorhalf = 10; % number of horseshoe vortices in a half span
+Nvorhalf = 25; % number of horseshoe vortices in a half span
 twist = linspace(2,-2,Nvorhalf+1); % half-span twist distribution (deg)
 % twist = sqrt(1-linspace(0,1,Nvorhalf+1));
 
@@ -24,7 +24,7 @@ twist = linspace(2,-2,Nvorhalf+1); % half-span twist distribution (deg)
 
 N = size(pctrl,1);
 
-alpha = 0;
+alpha = 10;
 uinf = [cosd(alpha) 0 sind(alpha)];
 Vinf = 1;
 
@@ -88,3 +88,10 @@ CL = sum(Cl.*cctrl.*dl(:,2))/S;
 %% Plot
 figure
 plot(pctrl(:,2),G)
+
+%%
+wmodep = cubicdisplacement(dl(N/2+1:N),ones(N/2,1));
+% wmodep = cubicdisplacement(dl(N/2+1:N),[ones(floor(N/4),1);-ones(ceil(N/4),1)]);
+
+figure
+plot(pctrl(N/2+1:N,2),polyval(wmodep,pctrl(N/2+1:N,2)))
