@@ -1,4 +1,4 @@
-function [Cl,Cd,Cp,xc] = Panel2D(af,alpha)
+function [Cl,Cd,Cm,Cp,xc] = Panel2D(af,alpha)
 % af: N-by-2 airfoil coords
 % alpha: AoA in degrees
 alf = alpha*pi/180;
@@ -74,3 +74,4 @@ Cn = -Cp.'*dx;
 Ca = Cp.'*dy;
 Cl = Cn*cos(alf) - Ca*sin(alf);
 Cd = Cn*sin(alf) + Ca*cos(alf);
+Cm = (Cp.*dy).'*yc + (Cp.*dx).'*(xc-0.25);
