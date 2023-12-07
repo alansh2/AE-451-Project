@@ -13,13 +13,13 @@ b = 10;                         % wingspan
 Lambda = 20;                    % c/4 sweep angle (deg)
 phi = 0;                       % dihedral angle (deg)
 ys = linspace(0,1,Nhalf+1);     % non-dimensional semispan coordinate of legs
-% ys = cos(linspace(pi/2,0,Nhalf+1));
+% ys = 0.5*cos(linspace(pi,0,Nhalf+1))+0.5;
 twist = linspace(0,0,Nhalf+1);  % twist distribution on ys (deg)
 % twist = 0.6*(2/pi^2*sqrt(1-ys.^2)+1/pi/8)*180/pi;
 % chord = 2*sqrt(1-ys.^2);         % chord distribution on ys
-chord = linspace(4,1.5,Nhalf+1);
+chord = linspace(2,2,Nhalf+1);
 
-[vertex,pctrl,cctrl] = geom2grid(b,chord,Lambda,phi,twist);
+[vertex,pctrl,cctrl] = geom2grid(b,chord,Lambda,phi,twist,ys);
 
 figure
 plot3(vertex(:,1),vertex(:,2),vertex(:,3),'o')
@@ -30,7 +30,7 @@ daspect([1 1 1])
 %% PLLT
 N = 2*Nhalf;
 
-alpha = 0;
+alpha = 10;
 uinf = [cosd(alpha) 0 sind(alpha)];
 Vinf = 1;
 
@@ -84,8 +84,9 @@ for i = 1:3
 end
 alf = atan2d(dot(v,un,2),dot(v,ua,2));
 Cl = zeros(N,1);
+Cm = zeros(N,1);
 for i = 1:N
-    Cl(i) = Panel2D(af,alf(i));
+    [Cl(i),~,Cm(i),~,~] = Panel2D(af,alf(i));
 end
 ftest = 2*vecnorm(cross(v,zeta,2),2,2).*G;
 
@@ -103,3 +104,21 @@ figure
 plot(pctrl(:,2),Cl.*cctrl/mean(cctrl))
 hold on
 plot(pctrl(:,2),Cl,'--')
+
+%% Ritz method
+figure
+hold on
+
+ys = linspace(0,1,51);
+for i = [1 2 5 10]
+    % Use Cl for now
+    P = rrcfpoly(i,vertex(Nhalf+1:N+1,2)/cosd(Lambda),Cl(Nhalf+1:N),Cm(Nhalf+1:N));
+    w = zeros(1,51);
+    for j = 1:i
+        w = w + polyval(flipud(P(1:j+4,j)),ys);
+    end
+    plot(ys,w,'DisplayName',sprintf('%d modes',i))
+end
+legend('Location','northwest')
+xlabel('y/b')
+ylabel('w')

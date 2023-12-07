@@ -9,9 +9,9 @@
 
 syms y b                            %Move down to variable initialization when this becomes a function
 twist_ord = 2;                      %Using to run as a stand alone script
-bend_ord = 3;                       %Using to run as a stand alone script
+bend_ord = 4;                       %Using to run as a stand alone script
 twist_bc = [0 0 0; 0 b 1];          %Using to run as a stand alone script
-bend_bc = [0 0 0; 0 0 1; 0 b 2];    %Using to run as a stand alone script
+bend_bc = [0 0 0; 0 0 1; 0 b 2; 0 b 3];    %Using to run as a stand alone script
 
 %% Boundary Condition Check
 
