@@ -39,11 +39,14 @@ for i = 1:N
         % pmult = [0;pmult./(1:j+i+3).'] % integrate
         pmult = [0;Q(1:j+i+3,1:j+2)*B(1:j+2,j)./(1:j+i+3).']; % one step
         C(i,j) = polyval(flipud(pmult),1); % evaluate at b
+        if j > i
+            C(j,i) = C(i,j);
+        end
     end
     % RHS = -(z.*polyval(flipud(A(1:i+4,i)),y/b)) * dy;
     RHS(i) = -(z.*(A(i+2:i+4,i).'*ypow(i:i+2,:))) * dy; % reduced number of computations
 end
-C = C + triu(C,1).'; % fill skipped duplicate computations
+% C = C + triu(C,1).'; % fill skipped duplicate computations
 
 Ac = (E*I*C) \ RHS;
 P = Ac.'.*A;
