@@ -1,27 +1,22 @@
-function [z,t] = MLLT(vertex,pctrl,cctrl,alpha,Vinf,rho,af)
-clear
-close all
-
-
-%% PLLT
-N = 2*Nhalf;
+function [z,t] = MLLT(geom,alpha,Vinf,rho,eOc)
+N = size(geom.pctrl,1);
 
 uinf = [cosd(alpha) 0 sind(alpha)];
 
-dl = diff(vertex,1,1);
-dA = diff(vertex(:,2)).*cctrl; % panel planform area
+dl = diff(geom.vertex,1,1);
+dA = diff(geom.vertex(:,2)).*geom.cctrl; % panel planform area
 zeta = dl./dA;
 
 vij = zeros(N,N,3);
 un = zeros(N,3);
 ua = zeros(N,3);
 for j = 1:N
-    r2 = pctrl(j,:) - vertex(1,:);
+    r2 = geom.pctrl(j,:) - geom.vertex(1,:);
     R2 = vecnorm(r2);
     for i = 1:N
-        % r1 = pctrl(j,:) - vertex(i,:);
+        % r1 = geom.pctrl(j,:) - geom.vertex(i,:);
         r1 = r2;
-        r2 = pctrl(j,:) - vertex(i+1,:);
+        r2 = geom.pctrl(j,:) - geom.vertex(i+1,:);
         % R1 = vecnorm(r1);
         R1 = R2;
         R2 = vecnorm(r2);
@@ -41,15 +36,15 @@ un = un./vecnorm(un,2,2); % make direction vectors unit
 ua = ua./vecnorm(ua,2,2);
 
 %% Iterate G
-Cl1 = Panel2D(af,0);
-Cl2 = Panel2D(af,1);
+Cl1 = Panel2D(geom.af,0);
+Cl2 = Panel2D(geom.af,1);
 a0 = (Cl2 - Cl1)*180/pi; % 2D lift curve slope
 alfZL = -Cl1/a0;
 A = diag(2*vecnorm(cross(repmat(uinf,N,1),zeta,2),2,2),0) - a0/(4*pi)*sum(vij.*reshape(un,1,N,3),3).';
 RHS = a0*(un*uinf.' - alfZL);
 G0 = A \ RHS;
 
-[G,E] = solvegamma(G0,alpha,vij,un,ua,zeta,af);
+[G,E] = solvegamma(G0,alpha,vij,un,ua,zeta,geom.af);
 
 % Check answer for Gamma/Vinf
 v = zeros(N,3);
@@ -60,13 +55,12 @@ alf = atan2d(dot(v,un,2),dot(v,ua,2));
 Cl = zeros(N,1);
 Cm = zeros(N,1);
 for i = 1:N
-    [Cl(i),~,Cm(i),~,~] = Panel2D(af,alf(i));
+    [Cl(i),~,Cm(i),~,~] = Panel2D(geom.af,alf(i));
 end
-ftest = 2*vecnorm(cross(v,zeta,2),2,2).*G;
-
+% Cl = 2*vecnorm(cross(v,zeta,2),2,2).*G;
 
 
 %% Dimensional Outputs
-z = 0.5*rho*Vinf^2*cctrl.*Cl;
-t = 0.5*rho*Vinf^2*cctrl.^2.*Cm;
+z = 0.5*rho*Vinf^2*geom.cctrl.*Cl;
+t = 0.5*rho*Vinf^2*geom.cctrl.^2.*(Cm + Cl*eOc);
 

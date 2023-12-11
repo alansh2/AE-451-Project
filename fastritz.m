@@ -55,15 +55,15 @@ if strcmp(method,'ritz')
         C(i+1:N,i) = C(i,i+1:N); % matrix is symmetric
     end
     RHS = (ypow(:,3:pd+1)*spdiags(Pben.',0:-1:-2,pd-1,N).*dy).'*z/ynode(n+1);
-    Ac = (structprop.E*structprop.I*C) \ RHS;
+    Ac = (structprop.EI*C) \ RHS;
     % Pben = flipud(spdiags(Pben.'.*ynode(n+1).^[2 1 0],[-2 -3 -4],nd+4,nd)*Ac(1:nd));
     Pben = [flipud(Ac(1)*Pben(:,1).*ynode(n+1).^[2;1;0]);0;0];
 else
     % Use governing equations to find best linear combination of modes
     if N == 1
-        M = structprop.E*structprop.I*Pben(3)*24;
+        M = structprop.EI*Pben(3)*24;
     else
-        M = structprop.E*structprop.I*spdiags(([B(1,3:N) 0 0;B(2,2:N) 0;B(3,:)].*(2:pd-2).*(1:pd-3)).',-2:0,N,N).';
+        M = structprop.EI*spdiags(([B(1,3:N) 0 0;B(2,2:N) 0;B(3,:)].*(2:pd-2).*(1:pd-3)).',-2:0,N,N).';
     end
     F = ypow(:,1:N)*M; % evaluate all polynomials
     K = (F'*F) \ (F'*(z*cosd(Lam)+D*t*sind(Lam)*cosd(Lam))); % solve minimization problem
@@ -84,11 +84,11 @@ if strcmp(method,'ritz')
         C(i+1:N,i) = C(i,i+1:N);
     end
     RHS = (ypow(:,2:pd+1)*spdiags(Ptor.',[0 -1],pd,N).*dy).'*t/ynode(n+1);
-    Ac = (structprop.G*structprop.J*C) \ RHS;
+    Ac = (structprop.GJ*C) \ RHS;
     % Ptor = flipud(spdiags(Ptor.'.*[ynode(n+1) 1],[-1 -2],nd+2,nd)*Ac(1:nd));
     Ptor = [Ac(1);Ac(1)*Ptor(1,1)*ynode(n+1);0];
 else
-    M = structprop.G*structprop.J*spdiags(([B(1,2:N) 0;B(2,:)].*(1:pd-1)).',-1:0,N,N).';
+    M = structprop.GJ*spdiags(([B(1,2:N) 0;B(2,:)].*(1:pd-1)).',-1:0,N,N).';
     F = ypow(:,1:N)*M;
     K = (F'*F) \ (F'*(-t*cosd(Lam)^2));
     Ptor = flipud(spdiags(Ptor.',[-1 -2],pd+1,N)*K);
