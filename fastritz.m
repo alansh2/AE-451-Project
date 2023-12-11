@@ -48,15 +48,16 @@ Pben(1:2,:) = Pben(1:2,:)./(2:pd-2);
 
 % Solve for polynomial coefficients
 if strcmp(method,'ritz')
-    nd = max([1 floor(N/2)]);
+    % nd = max([1 floor(N/2)]);
     for i = N:-1:1
         Q = spdiags(repmat(B(:,i),1,3).',-2:0,5,3); % multiplication target matrix
         C(i,i:N) = sum(Q*B(:,i:N)./(repmat(2*i-1:N+i-1,5,1)+(0:4).'),1); % evaluating 1 is a simple sum
         C(i+1:N,i) = C(i,i+1:N); % matrix is symmetric
     end
-    RHS = (ypow(:,3:pd+1)*spdiags(Pben.',0:-1:-2,pd-1,N).*dy).'*z;
+    RHS = (ypow(:,3:pd+1)*spdiags(Pben.',0:-1:-2,pd-1,N).*dy).'*z/ynode(n+1);
     Ac = (structprop.E*structprop.I*C) \ RHS;
-    Pben = flipud(spdiags(Pben.',[-2 -3 -4],nd+4,nd)*Ac(1:nd));
+    % Pben = flipud(spdiags(Pben.'.*ynode(n+1).^[2 1 0],[-2 -3 -4],nd+4,nd)*Ac(1:nd));
+    Pben = [flipud(Ac(1)*Pben(:,1).*ynode(n+1).^[2;1;0]);0;0];
 else
     % Use governing equations to find best linear combination of modes
     if N == 1
@@ -82,9 +83,10 @@ if strcmp(method,'ritz')
         C(i,i:N) = sum((i+1)*[1;-2;1].*(i+1:N+1)./(repmat(2*i-1:N+i-1,3,1)+(0:2).'),1);
         C(i+1:N,i) = C(i,i+1:N);
     end
-    RHS = (ypow(:,2:pd+1)*spdiags(Ptor.',[0 -1],pd,N).*dy).'*t;
+    RHS = (ypow(:,2:pd+1)*spdiags(Ptor.',[0 -1],pd,N).*dy).'*t/ynode(n+1);
     Ac = (structprop.G*structprop.J*C) \ RHS;
-    Ptor = flipud(spdiags(Ptor.',[-1 -2],nd+2,nd)*Ac(1:nd));
+    % Ptor = flipud(spdiags(Ptor.'.*[ynode(n+1) 1],[-1 -2],nd+2,nd)*Ac(1:nd));
+    Ptor = [Ac(1);Ac(1)*Ptor(1,1)*ynode(n+1);0];
 else
     M = structprop.G*structprop.J*spdiags(([B(1,2:N) 0;B(2,:)].*(1:pd-1)).',-1:0,N,N).';
     F = ypow(:,1:N)*M;
