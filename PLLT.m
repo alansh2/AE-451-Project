@@ -7,17 +7,24 @@ Al = [-0.18362 -0.20378 -0.17535 -0.12035]; % lower surface weights
 % Au = -Al;
 af = CST_airfoil(Au,Al,51);
 
+structprop.EI = 8830/144;
+structprop.GJ = 13330/144;
+e = 0.25;
+
+qinf = 20;
+alpha = 5;
+
 %% Wing geometry
-Nhalf = 10;                     % number of horseshoe vortices in a semispan
-b = 10;                         % wingspan
-Lambda = 20;                    % c/4 sweep angle (deg)
+Nhalf = 8;                     % number of horseshoe vortices in a semispan
+b = 5;                         % wingspan
+Lambda = 30;                    % c/4 sweep angle (deg)
 phi = 0;                       % dihedral angle (deg)
-ys = linspace(0,1,Nhalf+1);     % non-dimensional semispan coordinate of legs
-% ys = 0.5*cos(linspace(pi,0,Nhalf+1))+0.5;
-twist = linspace(0,0,Nhalf+1);  % twist distribution on ys (deg)
+ys = linspace(0,1,Nhalf+1).';     % non-dimensional semispan coordinate of legs
+% ys = 0.5*cos(linspace(pi,0,Nhalf+1).')+0.5;
+twist = linspace(0,0,Nhalf+1).';  % twist distribution on ys (deg)
 % twist = 0.6*(2/pi^2*sqrt(1-ys.^2)+1/pi/8)*180/pi;
 % chord = 2*sqrt(1-ys.^2);         % chord distribution on ys
-chord = linspace(2,2,Nhalf+1);
+chord = 5/12*linspace(1,1,Nhalf+1).';
 
 [vertex,pctrl,cctrl] = geom2grid(b,chord,Lambda,phi,twist,ys);
 
@@ -30,9 +37,7 @@ daspect([1 1 1])
 %% PLLT
 N = 2*Nhalf;
 
-alpha = 10;
 uinf = [cosd(alpha) 0 sind(alpha)];
-Vinf = 1;
 
 dl = diff(vertex,1,1);
 dA = diff(vertex(:,2)).*cctrl; % panel planform area
@@ -83,42 +88,47 @@ for i = 1:3
     v(:,i) = uinf(i) + vij(:,:,i)*G/(4*pi);
 end
 alf = atan2d(dot(v,un,2),dot(v,ua,2));
-Cl = zeros(N,1);
-Cm = zeros(N,1);
-for i = 1:N
-    [Cl(i),~,Cm(i),~,~] = Panel2D(af,alf(i));
+Cl = zeros(Nhalf,1);
+Cm = zeros(Nhalf,1);
+for i = 0:Nhalf-1
+    [Cl(i+1),~,Cm(i+1),~,~] = Panel2D(af,alf(Nhalf-i));
 end
 ftest = 2*vecnorm(cross(v,zeta,2),2,2).*G;
 
-% S = b^2/AR;
-% CL = sum(Cl.*cctrl.*dl(:,2))/S;
-
-%% Plot
-figure
-plot(pctrl(:,2),G)
-hold on
-plot(pctrl(:,2),G0,'--')
-plot(ys*b/2,G0(Nhalf)*sqrt(1-ys.^2))
-
-figure
-plot(pctrl(:,2),Cl.*cctrl/mean(cctrl))
-hold on
-plot(pctrl(:,2),Cl,'--')
+z = qinf*Cl.*cctrl(Nhalf+1:N);
+t = qinf*(Cm + Cl*e).*cctrl(Nhalf+1:N).^2;
 
 %% Ritz method
 figure
+ax1 = gca;
 hold on
-
-ys = linspace(0,1,51);
-for i = [1 2 5 10]
-    % Use Cl for now
-    P = rrcfpoly(i,vertex(Nhalf+1:N+1,2)/cosd(Lambda),Cl(Nhalf+1:N),Cm(Nhalf+1:N));
-    w = zeros(1,51);
-    for j = 1:i
-        w = w + polyval(flipud(P(1:j+4,j)),ys);
-    end
-    plot(ys,w,'DisplayName',sprintf('%d modes',i))
-end
-legend('Location','northwest')
 xlabel('y/b')
 ylabel('w')
+
+figure
+ax2 = gca;
+hold on
+xlabel('y/b')
+ylabel('twist')
+
+for i = [1 2 5]
+    [Pb,Pt] = fastritz(i,vertex(Nhalf+1:N+1,2)/cosd(Lambda),z,t,Lambda,structprop,'lstsq');
+    dw = polyval(Pb,vertex(Nhalf+1:N+1,2)/cosd(Lambda));
+    dtheta = polyval(Pt,vertex(Nhalf+1:N+1,2)/cosd(Lambda));
+    plot(ax1,ys,dw,'DisplayName',sprintf('%d modes',i))
+    plot(ax2,ys,dtheta,'DisplayName',sprintf('%d modes',i))
+end
+legend(ax1,'Location','northwest')
+legend(ax2,'Location','northwest')
+
+%% Update geometry to deformed state
+[vertex,pctrl,cctrl] = geom2grid(b,chord,Lambda,phi,twist+dtheta,ys);
+vertex(Nhalf+1:N+1,3) = vertex(Nhalf+1:N+1,3) + polyval(Pb,e*chord*sind(Lambda)+vertex(Nhalf+1:N+1,2)/cosd(Lambda));
+vertex(1:Nhalf,3) = flipud(vertex(Nhalf+2:N+1,3));
+pctrl(:,3) = pctrl(:,3) + polyval(Pb,(e*cctrl-(pctrl(:,1)-0.5*(vertex(1:N,1)+vertex(2:N+1,1))))*sind(Lambda)+abs(pctrl(:,2))/cosd(Lambda));
+
+figure
+plot3(vertex(:,1),vertex(:,2),vertex(:,3),'o')
+hold on
+plot3(pctrl(:,1),pctrl(:,2),pctrl(:,3),'x')
+daspect([1 1 1])

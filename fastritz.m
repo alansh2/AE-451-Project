@@ -35,8 +35,6 @@ D(n,n-1:n) = [-1 1]/(y(n)-y(n-1));
 % Work on bending %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 pd = N + 3;
 
-ypow = (y/ynode(n+1)).^(0:pd); % precompute necessary powers of y/b
-
 % The second derivative coefficients follow a nice pattern
 B(3,:) = cumsum(2*(3:pd-1)) + 6;
 B(2,:) = -2*B(3,:);
@@ -48,6 +46,7 @@ Pben(1:2,:) = Pben(1:2,:)./(2:pd-2);
 
 % Solve for polynomial coefficients
 if strcmp(method,'ritz')
+    ypow = (y/ynode(n+1)).^(0:pd); % precompute necessary powers of y/b
     % nd = max([1 floor(N/2)]);
     for i = N:-1:1
         Q = spdiags(repmat(B(:,i),1,3).',-2:0,5,3); % multiplication target matrix
@@ -59,6 +58,9 @@ if strcmp(method,'ritz')
     % Pben = flipud(spdiags(Pben.'.*ynode(n+1).^[2 1 0],[-2 -3 -4],nd+4,nd)*Ac(1:nd));
     Pben = [flipud(Ac(1)*Pben(:,1).*ynode(n+1).^[2;1;0]);0;0];
 else
+    ypow = y.^(0:pd); % precompute necessary powers of y
+    Pben = Pben.*ynode(n+1).^[2;1;0];
+    B = B.*ynode(n+1).^[2;1;0];
     % Use governing equations to find best linear combination of modes
     if N == 1
         M = structprop.EI*Pben(3)*24;
@@ -86,10 +88,12 @@ if strcmp(method,'ritz')
     RHS = (ypow(:,2:pd+1)*spdiags(Ptor.',[0 -1],pd,N).*dy).'*t/ynode(n+1);
     Ac = (structprop.GJ*C) \ RHS;
     % Ptor = flipud(spdiags(Ptor.'.*[ynode(n+1) 1],[-1 -2],nd+2,nd)*Ac(1:nd));
-    Ptor = [Ac(1);Ac(1)*Ptor(1,1)*ynode(n+1);0];
+    Ptor = [Ac(1);Ac(1)*Ptor(1,1)*ynode(n+1);0]*180/pi;
 else
+    Ptor(1,:) = Ptor(1,:)*ynode(n+1);
+    B(1,:) = B(1,:)*ynode(n+1);
     M = structprop.GJ*spdiags(([B(1,2:N) 0;B(2,:)].*(1:pd-1)).',-1:0,N,N).';
     F = ypow(:,1:N)*M;
     K = (F'*F) \ (F'*(-t*cosd(Lam)^2));
-    Ptor = flipud(spdiags(Ptor.',[-1 -2],pd+1,N)*K);
+    Ptor = flipud(spdiags(Ptor.',[-1 -2],pd+1,N)*K)*180/pi;
 end
