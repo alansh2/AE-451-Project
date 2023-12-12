@@ -123,9 +123,9 @@ legend(ax2,'Location','northwest')
 
 %% Update geometry to deformed state
 [vertex,pctrl,cctrl] = geom2grid(b,chord,Lambda,phi,twist+dtheta,ys);
-vertex(Nhalf+1:N+1,3) = vertex(Nhalf+1:N+1,3) + polyval(Pb,e*chord*sind(Lambda)+vertex(Nhalf+1:N+1,2)/cosd(Lambda));
+vertex(Nhalf+1:N+1,3) = vertex(Nhalf+1:N+1,3) + polyval(Pb,max(0,e*chord*sind(Lambda)+vertex(Nhalf+1:N+1,2)/cosd(Lambda)));
 vertex(1:Nhalf,3) = flipud(vertex(Nhalf+2:N+1,3));
-pctrl(:,3) = pctrl(:,3) + polyval(Pb,(e*cctrl-(pctrl(:,1)-0.5*(vertex(1:N,1)+vertex(2:N+1,1))))*sind(Lambda)+abs(pctrl(:,2))/cosd(Lambda));
+pctrl(:,3) = pctrl(:,3) + polyval(Pb,max(0,abs(pctrl(:,2))/cosd(Lambda)-(e*cctrl-(pctrl(:,1)-0.5*(vertex(1:N,1)+vertex(2:N+1,1))))*sind(Lambda)));
 
 figure
 plot3(vertex(:,1),vertex(:,2),vertex(:,3),'o')
