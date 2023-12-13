@@ -47,7 +47,7 @@ Pben(1:2,:) = Pben(1:2,:)./(2:pd-2);
 % Solve for polynomial coefficients
 if strcmp(method,'ritz')
     ypow = (y/ynode(n+1)).^(0:pd); % precompute necessary powers of y/b
-    % nd = max([1 floor(N/2)]);
+    nd = max([1 floor(N/2)]);
     for i = N:-1:1
         Q = spdiags(repmat(B(:,i),1,3).',-2:0,5,3); % multiplication target matrix
         C(i,i:N) = sum(Q*B(:,i:N)./(repmat(2*i-1:N+i-1,5,1)+(0:4).'),1); % evaluating 1 is a simple sum
@@ -87,7 +87,7 @@ if strcmp(method,'ritz')
     end
     RHS = (ypow(:,2:pd+1)*spdiags(Ptor.',[0 -1],pd,N).*dy).'*t/ynode(n+1);
     Ac = (structprop.GJ*C) \ RHS;
-    % Ptor = flipud(spdiags(Ptor.'.*[ynode(n+1) 1],[-1 -2],nd+2,nd)*Ac(1:nd));
+    % Ptor = flipud(spdiags(Ptor.'.*[ynode(n+1) 1],[-1 -2],nd+2,nd)*Ac(1:nd))*180/pi;
     Ptor = [Ac(1);Ac(1)*Ptor(1,1)*ynode(n+1);0]*180/pi;
 else
     Ptor(1,:) = Ptor(1,:)*ynode(n+1);
