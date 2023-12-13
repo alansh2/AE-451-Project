@@ -10,11 +10,12 @@ function [Gsol,E] = solvegamma(G0,alpha,vij,un,ua,zeta,af)
 % Outputs:
 %    Gsol: computed solution for Gamma/Vinf
 %       E: magnitude of the residual
+opts = optimoptions('fminunc','Display','off');
 
 N = length(G0);
 uinf = [cosd(alpha) 0 sind(alpha)];
 
-[Gsol,E] = fminunc(@objfun,G0(1:N/2));
+[Gsol,E] = fminunc(@objfun,G0(1:N/2),opts);
 Gsol = [Gsol;flipud(Gsol)];
 
     function fval = objfun(Ghalf)
